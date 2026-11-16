@@ -8,7 +8,16 @@ import time
 import torch
 import librosa
 import mlx_whisper
-from tqdm import tqdm
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    BarColumn,
+    TaskProgressColumn,
+    TimeRemainingColumn,
+    TimeElapsedColumn,
+    MofNCompleteColumn,
+)
 from pyannote.audio import Pipeline
 from pyannote.audio.pipelines.utils.hook import ProgressHook
 from pyannote.database.util import load_rttm
@@ -65,23 +74,29 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
 
     with open(output_md, "w", encoding="utf-8") as f:
         f.write(f"# Transkriptio: {os.path.basename(input_path)}\n\n")
-        
-        progress_bar = tqdm(
-            valid_turns,
-            desc="Transcribing",
-            unit="seg",
-            smoothing=0.1,
-            dynamic_ncols=True
-        )
-        
-        for turn, speaker in progress_bar:
-            chunk = audio_np[int(turn.start * sample_rate):int(turn.end * sample_rate)]
-            result = mlx_whisper.transcribe(chunk, path_or_hf_repo=MODEL_REPO, language=LANGUAGE, task="transcribe")
-            text = result["text"].strip()
-            if text:
-                markdown_line = f"**[{format_time(turn.start)}] {speaker}:** {text}\n\n"
-                f.write(markdown_line)
-                f.flush()
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[bold cyan]{task.description}"),
+            BarColumn(bar_width=40, style="dim", complete_style="magenta", finished_style="green"),
+            TaskProgressColumn(),
+            MofNCompleteColumn(),
+            TextColumn("•"),
+            TimeElapsedColumn(),
+            TextColumn("• ETA:"),
+            TimeRemainingColumn(),
+        ) as progress:
+            task = progress.add_task("Transcribing", total=total_segments)
+
+            for turn, speaker in valid_turns:
+                chunk = audio_np[int(turn.start * sample_rate):int(turn.end * sample_rate)]
+                result = mlx_whisper.transcribe(chunk, path_or_hf_repo=MODEL_REPO, language=LANGUAGE, task="transcribe")
+                text = result["text"].strip()
+                if text:
+                    markdown_line = f"**[{format_time(turn.start)}] {speaker}:** {text}\n\n"
+                    f.write(markdown_line)
+                    f.flush()
+                progress.advance(task)
 
     if os.path.exists(cache_rttm) and not preserve_cache:
         os.remove(cache_rttm)

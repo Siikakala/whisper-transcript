@@ -53,7 +53,7 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
         return
 
     file_start_time = time.time()
-    print(f"\n{'='*60}\n🎵 Loading audio: {os.path.basename(input_path)}")
+    print(f"🎵 Loading audio: {os.path.basename(input_path)}")
 
     audio_np, sample_rate = librosa.load(input_path, sr=16000, mono=True)
     print(f"⏱️  Audio duration: {format_time(len(audio_np) / sample_rate)}")

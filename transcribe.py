@@ -13,7 +13,7 @@ from pyannote.audio.pipelines.utils.hook import ProgressHook
 from pyannote.database.util import load_rttm
 
 # --- CONFIGURATION ---
-FALLBACK_HF_TOKEN = ""
+FALLBACK_HF_TOKEN = "" # Alternative Hugging Face token
 MODEL_REPO = "mlx-community/whisper-large-v3-mlx"
 LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for auto-detect
 # ---------------------

@@ -56,7 +56,7 @@ Pyannote's speaker diarization models are open-weights, but they are gated on Hu
    - [pyannote/speaker-diarization-community-1](https://huggingface.copyannote/speaker-diarization-community-1)
 3. Generate an Access Token (with `Read` permissions) at [huggingface.co/settings/tokens](https://huggingface.cosettings/tokens).
 
-Toekn is primarily used from environmental variable but can also be added to the script configuration. If both are configured, environmental variable is prefered.
+Token is primarily used from environmental variable but can also be added to the script configuration. If both are configured, environmental variable is prefered.
 
 *(Note: On your first run, `mlx-whisper` will also automatically download `mlx-community/whisper-large-v3-mlx` (~3 GB) to your local Hugging Face cache).*
 

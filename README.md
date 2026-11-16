@@ -10,7 +10,7 @@ It combines **Pyannote Audio** (running on PyTorch MPS) to detect who is speakin
 
 - **100% Local Execution:** No audio data leaves your Mac.
 - **Apple Silicon Optimized:** Uses PyTorch `mps` for speaker diarization and Apple's `mlx` framework for Whisper inference.
-- **Diarization Caching (`.rttm`):** Automatically saves the speaker timeline to a `.rttm` file next to your audio. If transcription is interrupted, re-running skips the diarization step.
+- **Diarization Caching (`.rttm`):** Automatically saves the speaker timeline to a `.rttm` file next to your audio. If transcription is interrupted, re-running skips the diarization step. Removed automatically if `.md` file is created succefully.
 - **Batch Processing:** Supports multiple files and shell wildcards (`*.mp3`, `*.m4a`, `*.wav`), automatically skipping files that already have a `.md` transcript.
 - **Configurable Language:** Set your target language (`fi`, `en`, `sv`, etc.) or `None` for automatic detection at the top of `transcribe.py`.
 
@@ -33,7 +33,6 @@ Create a dedicated Conda environment with **Python 3.11** (newer Python versions
 
 ```bash
 conda create -n transcribe python=3.11 -y
-conda activate transcribe
 ```
 
 Install the required packages from `requirements.txt`:
@@ -57,6 +56,8 @@ Pyannote's speaker diarization models are open-weights, but they are gated on Hu
    - [pyannote/speaker-diarization-community-1](https://huggingface.copyannote/speaker-diarization-community-1)
 3. Generate an Access Token (with `Read` permissions) at [huggingface.co/settings/tokens](https://huggingface.cosettings/tokens).
 
+Toekn is primarily used from environmental variable but can also be added to the script configuration. If both are configured, environmental variable is prefered.
+
 *(Note: On your first run, `mlx-whisper` will also automatically download `mlx-community/whisper-large-v3-mlx` (~3 GB) to your local Hugging Face cache).*
 
 ---
@@ -67,7 +68,7 @@ Open `transcribe.py` and adjust the top configuration block if needed:
 
 ```python
 # --- CONFIGURATION ---
-FALLBACK_HF_TOKEN = ""
+FALLBACK_HF_TOKEN = "" # Alternative Hugging Face token
 MODEL_REPO = "mlx-community/whisper-large-v3-mlx"
 LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for auto-detect
 # ---------------------
@@ -80,7 +81,7 @@ LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for 
 1. Activate your Conda environment and set your Hugging Face token:
    ```bash
    conda activate transcribe
-   export HF_TOKEN="hf_your_token_here"
+   export HF_TOKEN="your_token_here"
    ```
 
 2. **Transcribe a single file:**
@@ -101,6 +102,11 @@ LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for 
 5. **Force re-processing (ignore existing `.md` and `.rttm` files):**
    ```bash
    python transcribe.py ~/recording.mp3 --overwrite
+   ```
+
+6, **Retain `.rttm` cache files:**
+```bash
+   python transcribe.py ~/recording.mp3 --preserve-cache
    ```
 
 ## Output Format

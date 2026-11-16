@@ -8,6 +8,7 @@ import time
 import torch
 import librosa
 import mlx_whisper
+from tqdm import tqdm
 from pyannote.audio import Pipeline
 from pyannote.audio.pipelines.utils.hook import ProgressHook
 from pyannote.database.util import load_rttm
@@ -36,7 +37,7 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
     output_md, cache_rttm = f"{base_name}.md", f"{base_name}.rttm"
 
     if os.path.exists(output_md) and not overwrite:
-        print(f"⏭️  Skipping '{os.path.basename(input_path)}' -> '{os.path.basename(output_md)}' already exists (use --overwrite to redo).")
+        print(f"⏭️  Skipping '{os.path.basename(input_path)}' -> '{os.path.basename(output_md)}' already exists.")
         return
 
     file_start_time = time.time()
@@ -64,18 +65,23 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
 
     with open(output_md, "w", encoding="utf-8") as f:
         f.write(f"# Transkriptio: {os.path.basename(input_path)}\n\n")
-        for idx, (turn, speaker) in enumerate(valid_turns, start=1):
+        
+        progress_bar = tqdm(
+            valid_turns,
+            desc="Transcribing",
+            unit="seg",
+            smoothing=0.1,
+            dynamic_ncols=True
+        )
+        
+        for turn, speaker in progress_bar:
             chunk = audio_np[int(turn.start * sample_rate):int(turn.end * sample_rate)]
             result = mlx_whisper.transcribe(chunk, path_or_hf_repo=MODEL_REPO, language=LANGUAGE, task="transcribe")
             text = result["text"].strip()
-            str_start = format_time(turn.start)
             if text:
-                markdown_line = f"**[{str_start}] {speaker}:** {text}\n\n"
-                print(f"[{idx}/{total_segments}] {markdown_line.strip()}")
+                markdown_line = f"**[{format_time(turn.start)}] {speaker}:** {text}\n\n"
                 f.write(markdown_line)
                 f.flush()
-            else:
-                print(f"[{idx}/{total_segments}] [{str_start}] {speaker}: (no speech detected)")
 
     if os.path.exists(cache_rttm) and not preserve_cache:
         os.remove(cache_rttm)

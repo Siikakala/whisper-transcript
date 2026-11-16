@@ -1,9 +1,12 @@
+import os
+# Disable ugly Hugging Face Hub cache-check bars before importing huggingface_hub dependents
+os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module=r"pyannote\.audio\.core\.io")
 
 import argparse
 import glob
-import os
 import time
 import torch
 import librosa

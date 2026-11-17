@@ -128,7 +128,7 @@ LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for 
 
 ## Output Format
 
-For an input file named `session.mp3`, the script generates:
+For an input file named `session.mp3`, the script generates next to it:
 - `session.rttm` — Cached speaker timeline timestamps. Removed after transcription (unless `--preserve-cache` is used)
 - `session.md` — Formatted Markdown transcript:
 

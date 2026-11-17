@@ -93,8 +93,7 @@ LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for 
 > [!IMPORTANT]
 > Hugging Face progress bars are hidden as they use different progress bar framework. This might cause some steps seem to take long time (or that script has hung) on first run as the necessary models are downloaded to local cache. Please be patient and check your network usage before interrupting the script!
  
-
-> [!INFO]
+> [!NOTE]
 > Hugging face progress bars can be restored by commenting out the 3rd line in transcribe.py but it will cause some visual glitches when one progress bar framework tries to parse the output of another framework's output. It won't affect the transribing process in any way, it just looks ugly in the console window.
 > 
 > If your internet speed is slow, you could re-enable the progress bars for your first run and after the models are cached, disable the progress bars again.

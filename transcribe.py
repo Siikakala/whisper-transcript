@@ -47,9 +47,15 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
     base_name, _ = os.path.splitext(input_path)
     output_md, cache_rttm = f"{base_name}.md", f"{base_name}.rttm"
 
+    # Smart Skip / Resume Logic:
+    # If .md exists AND .rttm does NOT exist, transcription was fully completed previously.
+    if os.path.exists(output_md) and not os.path.exists(cache_rttm) and not overwrite:
+        print(f"⏭️  Skipping '{os.path.basename(input_path)}' -> Finished transcription already exists.")
+        return
+
     processed_timestamps = set()
-    if os.path.exists(output_md) and not overwrite:
-        print(f"🔄 Resuming existing file '{os.path.basename(output_md)}'...")
+    if os.path.exists(output_md) and os.path.exists(cache_rttm) and not overwrite:
+        print(f"🔄 Resuming interrupted transcription for '{os.path.basename(output_md)}'...")
         with open(output_md, "r", encoding="utf-8") as f:
             for line in f:
                 if line.startswith("**["):
@@ -96,7 +102,7 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
             TextColumn("• ETA:"),
             TimeRemainingColumn(),
         ) as progress:
-            task = progress.add_spec("Transcribing" if not processed_timestamps else "Resuming transcription", total=total_segments) if hasattr(Progress, 'add_spec') else progress.add_task("Transcribing", total=total_segments)
+            task = progress.add_task("Resuming transcription" if processed_timestamps else "Transcribing", total=total_segments)
             
             # If resuming, advance progress bar past already processed items
             if processed_timestamps:

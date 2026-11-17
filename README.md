@@ -4,7 +4,7 @@ A local Python tool for transcribing long audio files into speaker-labeled Markd
 
 It combines **Pyannote Audio** (running on PyTorch MPS) to detect who is speaking and when, with **MLX-Whisper** (`whisper-large-v3-mlx`) for fast, hardware-accelerated speech-to-text transcription.
 
-[!NOTE] This script was vibe coded! It was built iteratively through AI-assisted prompting to solve real-world macOS dependency quirks, long-file caching, and local Apple Silicon acceleration.
+> [!NOTE] This script was vibe coded! It was built iteratively through AI-assisted prompting to solve real-world macOS dependency quirks, long-file caching, and local Apple Silicon acceleration.
 
 ## Features
 

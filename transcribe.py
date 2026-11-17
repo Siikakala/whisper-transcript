@@ -53,19 +53,6 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
         print(f"⏭️  Skipping '{os.path.basename(input_path)}' -> Finished transcription already exists.")
         return
 
-    processed_timestamps = set()
-    if os.path.exists(output_md) and os.path.exists(cache_rttm) and not overwrite:
-        print(f"🔄 Resuming interrupted transcription for '{os.path.basename(output_md)}'...")
-        with open(output_md, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("**["):
-                    end_idx = line.find("]")
-                    if end_idx != -1:
-                        processed_timestamps.add(line[3:end_idx])
-    elif not os.path.exists(output_md):
-        with open(output_md, "w", encoding="utf-8") as f:
-            f.write(f"# Transkriptio: {os.path.basename(input_path)}\n\n")
-
     file_start_time = time.time()
     print(f"🎵 Loading audio: {os.path.basename(input_path)}")
     audio_np, sample_rate = librosa.load(input_path, sr=16000, mono=True)
@@ -87,6 +74,19 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
     valid_turns = [(turn, speaker) for turn, _, speaker in annotation.itertracks(yield_label=True) if (turn.end - turn.start) >= 0.3]
     total_segments = len(valid_turns)
     
+    processed_timestamps = set()
+    if os.path.exists(output_md) and not overwrite:
+        print(f"🔄 Resuming interrupted transcription for '{os.path.basename(output_md)}'...")
+        with open(output_md, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("**["):
+                    end_idx = line.find("]")
+                    if end_idx != -1:
+                        processed_timestamps.add(line[3:end_idx])
+    else:
+        with open(output_md, "w", encoding="utf-8") as f:
+            f.write(f"# Transkriptio: {os.path.basename(input_path)}\n\n")
+
     print(f"🤖 Transcribing {total_segments} speaker segments with MLX-Whisper (language: {LANGUAGE or 'auto-detect'})...")
 
     # Open in append mode ("a") to safely resume or continue writing

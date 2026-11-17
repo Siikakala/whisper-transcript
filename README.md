@@ -10,6 +10,7 @@ Fast audio transcription with speaker diarization on Apple Silicon using **MLX-W
 * 🚀 **Optimized for Apple Silicon**: Leverages `mlx-whisper` for high-speed transcription.
 * 👥 **Speaker Diarization**: Uses `pyannote/speaker-diarization-3.1` to separate and label different speakers.
 * 🔄 **Smart Auto-Resume & Cached RTTM**: Automatically caches speaker diarization timelines into a `.rttm` file and tracks progress in the `.md` output. If a transcription run is interrupted (or if only diarization finished), running the script again will reuse the cached `.rttm` timeline, skip already-transcribed segments, and pick up right where it left off.
+* 🇫🇮 Configurable Language: Set your target language (fi, en, sv, etc.) or None for automatic detection at the top of transcribe.py. _(defaults to fi)_
 * 🛡️ **Clean Interrupts**: Gracefully handles `Ctrl+C` (`KeyboardInterrupt`) without cluttering your terminal with tracebacks.
 
 ## Prerequisites
@@ -61,6 +62,7 @@ Pyannote's diarization pipeline requires authentication and accepted model licen
    ```bash
    export HF_TOKEN="your_huggingface_token_here"
    ```
+   _The token can be set to the script configuration if you prefer storing it there. If both are set, the environment variable is preferred_
 
 ## Usage
 

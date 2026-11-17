@@ -30,7 +30,7 @@ Fast audio transcription with speaker diarization on Apple Silicon using **MLX-W
 Create and activate a dedicated Conda environment with Python 3.11 (newer Python versions like 3.13+ or 3.15 may have compatibility issues with pyannote.audio dependencies):
 
 ```bash
-conda create -n whisper-env python=3.10 -y
+conda create -n whisper-env python=3.11 -y
 conda activate whisper-env
 ```
 

@@ -1,4 +1,5 @@
 import os
+
 # Disable ugly Hugging Face Hub cache-check bars before importing huggingface_hub dependents
 os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
 
@@ -31,13 +32,11 @@ MODEL_REPO = "mlx-community/whisper-large-v3-mlx"
 LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for auto-detect
 # ---------------------
 
-
 def format_time(seconds: float) -> str:
     hours = int(seconds // 3600)
     minutes = int((seconds % 3600) // 60)
     secs = int(seconds % 60)
     return f"{hours:02d}:{minutes:02d}:{secs:02d}" if hours > 0 else f"{minutes:02d}:{secs:02d}"
-
 
 def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, preserve_cache: bool = False):
     input_path = os.path.expanduser(input_path)
@@ -48,13 +47,21 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
     base_name, _ = os.path.splitext(input_path)
     output_md, cache_rttm = f"{base_name}.md", f"{base_name}.rttm"
 
+    processed_timestamps = set()
     if os.path.exists(output_md) and not overwrite:
-        print(f"⏭️  Skipping '{os.path.basename(input_path)}' -> '{os.path.basename(output_md)}' already exists.")
-        return
+        print(f"🔄 Resuming existing file '{os.path.basename(output_md)}'...")
+        with open(output_md, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("**["):
+                    end_idx = line.find("]")
+                    if end_idx != -1:
+                        processed_timestamps.add(line[3:end_idx])
+    elif not os.path.exists(output_md):
+        with open(output_md, "w", encoding="utf-8") as f:
+            f.write(f"# Transkriptio: {os.path.basename(input_path)}\n\n")
 
     file_start_time = time.time()
     print(f"🎵 Loading audio: {os.path.basename(input_path)}")
-
     audio_np, sample_rate = librosa.load(input_path, sr=16000, mono=True)
     print(f"⏱️  Audio duration: {format_time(len(audio_np) / sample_rate)}")
 
@@ -73,11 +80,11 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
 
     valid_turns = [(turn, speaker) for turn, _, speaker in annotation.itertracks(yield_label=True) if (turn.end - turn.start) >= 0.3]
     total_segments = len(valid_turns)
+    
     print(f"🤖 Transcribing {total_segments} speaker segments with MLX-Whisper (language: {LANGUAGE or 'auto-detect'})...")
 
-    with open(output_md, "w", encoding="utf-8") as f:
-        f.write(f"# Transkriptio: {os.path.basename(input_path)}\n\n")
-
+    # Open in append mode ("a") to safely resume or continue writing
+    with open(output_md, "a", encoding="utf-8") as f:
         with Progress(
             SpinnerColumn(),
             TextColumn("[bold cyan]{task.description}"),
@@ -89,14 +96,23 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
             TextColumn("• ETA:"),
             TimeRemainingColumn(),
         ) as progress:
-            task = progress.add_task("Transcribing", total=total_segments)
+            task = progress.add_spec("Transcribing" if not processed_timestamps else "Resuming transcription", total=total_segments) if hasattr(Progress, 'add_spec') else progress.add_task("Transcribing", total=total_segments)
+            
+            # If resuming, advance progress bar past already processed items
+            if processed_timestamps:
+                completed_count = sum(1 for turn, _ in valid_turns if format_time(turn.start) in processed_timestamps)
+                progress.advance(task, advance=completed_count)
 
             for turn, speaker in valid_turns:
+                ts_str = format_time(turn.start)
+                if ts_str in processed_timestamps:
+                    continue
+
                 chunk = audio_np[int(turn.start * sample_rate):int(turn.end * sample_rate)]
                 result = mlx_whisper.transcribe(chunk, path_or_hf_repo=MODEL_REPO, language=LANGUAGE, task="transcribe")
                 text = result["text"].strip()
                 if text:
-                    markdown_line = f"**[{format_time(turn.start)}] {speaker}:** {text}\n\n"
+                    markdown_line = f"**[{ts_str}] {speaker}:** {text}\n\n"
                     f.write(markdown_line)
                     f.flush()
                 progress.advance(task)
@@ -106,7 +122,6 @@ def process_file(input_path: str, pipeline: Pipeline, overwrite: bool = False, p
         print(f"🧹 Removed temporary cache file '{os.path.basename(cache_rttm)}'")
 
     print(f"✅ Saved '{output_md}' in {format_time(time.time() - file_start_time)}")
-
 
 def main():
     parser = argparse.ArgumentParser(description="Transcribe audio file(s) with speaker diarization to Markdown on Apple Silicon.")
@@ -126,9 +141,9 @@ def main():
         expanded_files.extend(sorted(matches) if matches else [pattern])
 
     print(f"📂 Found {len(expanded_files)} file(s) to process.")
+
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"⚡ Loading Pyannote Diarization Pipeline on {device}...")
-
     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", token=hf_token)
     pipeline.to(device)
 
@@ -139,7 +154,8 @@ def main():
 
     print(f"\n🎉 All done! Total elapsed time: {format_time(time.time() - total_start)}")
 
-
 if __name__ == "__main__":
-    main()
-
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n👋 Transcription interrupted by user. Exiting cleanly.")

@@ -89,6 +89,9 @@ LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for 
 
 ## Usage
 
+> [!IMPORTANT]
+> Hugging Face progress bars are hidden as they use different progress bar framework. This might cause some steps seem to take long time (or that script has hung) on first run as the necessary models are downloaded to local cache. Please be patient and check your network usage before interrupting the script!
+
 1. Activate your Conda environment and set your Hugging Face token:
    ```bash
    conda activate transcribe

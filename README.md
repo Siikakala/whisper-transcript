@@ -27,8 +27,9 @@ It combines **Pyannote Audio** (running on PyTorch MPS) to detect who is speakin
 3. **Conda / Miniconda** (recommended to isolate Python 3.11 and PyTorch dependencies).
    ```bash
    brew install --cask miniconda
+   conda init zsh
    ```
-
+   Restart your terminal before continuing so the conda can initialize correctly!
 ---
 
 ## Environment Setup
@@ -62,10 +63,10 @@ Pyannote's speaker diarization models are open-weights, but they are gated on Hu
 
 1. Create a free account at [huggingface.co](https://huggingface.co).
 2. Visit **all three** model pages below while logged in and click **"Agree and access repository"** on each:
-   - [pyannote/speaker-diarization-3.1](https://huggingface.copyannote/speaker-diarization-3.1)
-   - [pyannote/segmentation-3.0](https://huggingface.copyannote/segmentation-3.0)
-   - [pyannote/speaker-diarization-community-1](https://huggingface.copyannote/speaker-diarization-community-1)
-3. Generate an Access Token (with `Read` permissions) at [huggingface.co/settings/tokens](https://huggingface.cosettings/tokens).
+   - [pyannote/speaker-diarization-3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
+   - [pyannote/segmentation-3.0](https://huggingface.co/pyannote/segmentation-3.0)
+   - [pyannote/speaker-diarization-community-1](https://huggingface.co/pyannote/speaker-diarization-community-1)
+3. Generate an Access Token (with `Read` permissions) at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
 
 Token is primarily used from environmental variable but can also be added to the script configuration. If both are configured, environmental variable is preferred.
 
@@ -119,7 +120,7 @@ LANGUAGE = "fi"  # ISO 639-1 language code (e.g., "fi", "en", "sv") or None for 
    ```
 
 6. **Retain `.rttm` cache files:**
-```bash
+   ```bash
    python transcribe.py ~/recording.mp3 --preserve-cache
    ```
 
